@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
+	"net/url"
 	"os"
 	"strings"
 
@@ -23,10 +24,14 @@ type attachments struct {
 	ID, Filename, ContentType, FileSize string
 }
 
-func authenticate(client *http.Client, auth []byte) {
+func authenticate(client *http.Client) {
+	form := url.Values{}
+	form.Add("user", viper.GetString("user"))
+	form.Add("pass", viper.GetString("pass"))
+
 	baseURL := viper.GetString("rt") + viper.GetString("restURL")
-	log.Warn("Logging In")
-	resp, err := client.Post(baseURL, "application/x-www-form-urlencoded", bytes.NewBuffer(auth))
+	log.Warnln("Logging In", form.Encode())
+	resp, err := client.PostForm(baseURL, form)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -166,12 +171,13 @@ func logout(client *http.Client) {
 
 func init() {
 	viper.SetConfigName("rt")
-	viper.AddConfigPath("$HOME/Support")
 	viper.AddConfigPath(".")
+	viper.AddConfigPath("$HOME/Support")
 
-	viper.SetDefault("rt", "https://support.solace.com/rt")
+	viper.SetDefault("rt", "https://demo.bestpractical.com")
 	viper.SetDefault("restURL", "/REST/1.0")
-	viper.SetDefault("auth", "user=&pass=")
+	viper.SetDefault("user", "guest")
+	viper.SetDefault("pass", "guest")
 	viper.SetDefault("workers", 4)
 
 	if err := viper.ReadInConfig(); err != nil { // Handle errors reading the config file
@@ -227,11 +233,10 @@ func main() {
 		Jar: jar,
 	}
 
-	auth := []byte(viper.GetString("auth"))
-	authenticate(client, auth)
+	authenticate(client)
 	for _, ticket := range args {
 		att := getAttachments(client, ticket)
-		log.Println(att)
+		log.Debug(att)
 		if len(att) == 0 {
 			log.Errorln("Ticket", ticket, "does not exists")
 			continue
