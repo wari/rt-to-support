@@ -1,0 +1,10 @@
+# RT URL, e.g. "http://support.company.com/rt"
+# No trailing /
+rt = "https://demo.bestpractical.com"
+
+# RT credentials (guest works for the demo site)
+user = "guest"
+pass = "guest"
+
+# Number of concurrent downloads (4 works best for most cases, I use 10)
+workers = 4

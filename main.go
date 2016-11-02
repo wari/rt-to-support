@@ -30,7 +30,7 @@ func authenticate(client *http.Client) {
 	form.Add("pass", viper.GetString("pass"))
 
 	baseURL := viper.GetString("rt") + viper.GetString("restURL")
-	log.Warnln("Logging In", form.Encode())
+	log.Warnln("Logging In")
 	resp, err := client.PostForm(baseURL, form)
 	if err != nil {
 		log.Fatal(err)
