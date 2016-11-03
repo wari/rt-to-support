@@ -35,7 +35,7 @@ func authenticate(client *http.Client) {
 	}
 }
 
-func processDownload(client *http.Client, ticket string, att []attachments) {
+func processDownload(client *http.Client, att []attachments) {
 	jobs := make(chan request, len(att))
 	result := make(chan bool, len(att))
 
@@ -49,23 +49,24 @@ func processDownload(client *http.Client, ticket string, att []attachments) {
 			continue
 		}
 		if a.ContentType == "text/plain" && a.Filename == "(Unnamed)" {
-			jobs <- request{client, ticket, a.ID, ticket + "_" + a.ID + ".txt"}
+			jobs <- request{client, a.Ticket, a.ID, a.Ticket + "_" + a.ID + ".txt"}
 			count++
 			continue
 		}
 		if a.ContentType == "text/html" && a.Filename == "(Unnamed)" {
-			jobs <- request{client, ticket, a.ID, ticket + "_" + a.ID + ".html"}
+			jobs <- request{client, a.Ticket, a.ID, a.Ticket + "_" + a.ID + ".html"}
 			count++
 			continue
 		}
 		if a.Filename != "(Unnamed)" {
-			jobs <- request{client, ticket, a.ID, ticket + "_" + a.ID + "_" + a.Filename}
+			jobs <- request{client, a.Ticket, a.ID, a.Ticket + "_" + a.ID + "_" + a.Filename}
 			count++
 			continue
 		}
 		log.Println("Don't know how to handle:", a.ID, a.ContentType)
 	}
 	close(jobs)
+	// Wait until every download is done
 	for f := 0; f < count; f++ {
 		<-result
 	}
@@ -106,6 +107,7 @@ func getAttachments(client *http.Client, rt string) []attachments {
 			att = append(att, attachments{
 				ID:          id,
 				Filename:    fn,
+				Ticket:      rt,
 				ContentType: contents[0],
 				FileSize:    contents[1],
 			})

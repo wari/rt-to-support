@@ -15,7 +15,7 @@ var (
 )
 
 type attachments struct {
-	ID, Filename, ContentType, FileSize string
+	ID, Ticket, Filename, ContentType, FileSize string
 }
 
 type request struct {
@@ -51,14 +51,15 @@ func main() {
 	}
 
 	authenticate(client)
+	var att []attachments
 	for _, ticket := range args {
-		att := getAttachments(client, ticket)
+		att = append(att, getAttachments(client, ticket)...)
 		log.Debug(att)
 		if len(att) == 0 {
 			log.Errorln("Ticket", ticket, "does not exists")
 			continue
 		}
-		processDownload(client, ticket, att)
 	}
+	processDownload(client, att)
 	logout(client)
 }
